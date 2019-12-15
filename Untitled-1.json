@@ -15,7 +15,7 @@ filter {
       mutate {
           remove_field => [ "Hostname" ]
           add_field => {
-              "indexname" => "system-%{+yyyy-MM-dd}"
+              "indexname" => "system"
           }
         }
     }
@@ -26,13 +26,15 @@ else if [fields][logtype] == "nginx" {
       }
       mutate {
         add_field => {
-            "indexname" => "nginx-%{+yyyy-MM-dd}"
+            "indexname" => "nginx"
         }
       }
     }
-}
+  }
+
 output {
    elasticsearch {
-        hosts => ["http://localhost:9200"]
+      hosts => ["http://localhost:9200"]
+      index => "%{indexname}-%{+yyyy-MM-dd}"
    }
 }
