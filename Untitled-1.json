@@ -1,0 +1,38 @@
+input {
+   beats {
+        port => 5044
+   }
+}
+
+filter {
+    if [fields][logtype] == "system" {
+      grok {
+        match => { "message" => "%{MONTH:Month} %{MONTHDAY:Monthday} %{HOUR:Hour}:%{MINUTE:Minute}:%{SECOND:Second} %{HOSTNAME:Hostname} %{HOSTNAME:ProgramName}%{GREEDYDATA:LogMessage}" }
+      }
+     if [ProgramName] == "filebeat"{
+                drop {}
+        }
+      mutate {
+          remove_field => [ "Hostname" ]
+          add_field => {
+              "indexname" => "system-%{+yyyy-MM-dd}"
+          }
+        }
+    }
+
+else if [fields][logtype] == "nginx" {
+    grok {
+        match => { "message" => "%{IP:SourceIP} - - \[%{MONTHDAY:Monthday}/%{MONTH:Month}/%{YEAR:Year}:%{HOUR:Hour}:%{MINUTE:Minut}:%{SECOND:Second} -%{INT}\] \"%{WORD:HTTP_METHOD} %{URIPATH:HTTP_PATH} %{WORD:PROTO_TYPE}/%{BASE16FLOAT:PROTO_VERSION}\" %{INT:HTTP_RESPONSE} %{INT:HTTP_CONTENT_SIZE} \"-|%{URI:URL}\" %{GREEDYDATA}" }
+      }
+      mutate {
+        add_field => {
+            "indexname" => "nginx-%{+yyyy-MM-dd}"
+        }
+      }
+    }
+}
+output {
+   elasticsearch {
+        hosts => ["http://localhost:9200"]
+   }
+}
