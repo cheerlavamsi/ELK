@@ -1,9 +1,12 @@
 # ELK
 Elastic Logstash Kibana
+
 Installation Steps.
 
 Logstash with single file from filebeat
+
 FileName : cat /etc/logstash/conf.d/sample.conf
+
 input {
   beats {
     port => 5044
