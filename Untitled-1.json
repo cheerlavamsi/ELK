@@ -1,40 +1,50 @@
 input {
-   beats {
-        port => 5044
-   }
+  beats {
+    port => 5044
+  }
 }
 
 filter {
-    if [fields][logtype] == "system" {
+  if [fields][logtype] == "system" {
       grok {
-        match => { "message" => "%{MONTH:Month} %{MONTHDAY:Monthday} %{HOUR:Hour}:%{MINUTE:Minute}:%{SECOND:Second} %{HOSTNAME:Hostname} %{HOSTNAME:ProgramName}%{GREEDYDATA:LogMessage}" }
+        match => { "message" => "%{MONTH:Month} %{MONTHDAY:MonthDay} %{HOUR:Hour}:%{MINUTE:Minute}:%{SECOND:Second} %{HOSTNAME:Hostname} %{HOSTNAME:ProgramName}:%{GREEDYDATA:LogMessage}" }
       }
-     if [ProgramName] == "filebeat"{
-                drop {}
-        }
-      mutate {
-          remove_field => [ "Hostname" ]
-          add_field => {
-              "indexname" => "system"
-          }
-        }
-    }
-
-else if [fields][logtype] == "nginx" {
-    grok {
-        match => { "message" => "%{IP:SourceIP} - - \[%{MONTHDAY:Monthday}/%{MONTH:Month}/%{YEAR:Year}:%{HOUR:Hour}:%{MINUTE:Minut}:%{SECOND:Second} -%{INT}\] \"%{WORD:HTTP_METHOD} %{URIPATH:HTTP_PATH} %{WORD:PROTO_TYPE}/%{BASE16FLOAT:PROTO_VERSION}\" %{INT:HTTP_RESPONSE} %{INT:HTTP_CONTENT_SIZE} \"-|%{URI:URL}\" %{GREEDYDATA}" }
+     if [ProgramName] == "filebeat" {
+            drop {}
       }
       mutate {
+        remove_field => [ "Hostname" ]
         add_field => {
-            "indexname" => "nginx"
+          "indexname" => "system"
+        }
+      }
+    } 
+  else if [fields][logtype] == "nginx" {
+    grok {
+        match => { "message" => "%{IP:SourceIP} - - \[%{MONTHDAY:Monthday}/%{MONTH:Month}/%{YEAR:Year}:%{HOUR:Hour}:%{MINUTE:Minute}:%{SECOND:Second} -%{INT}\] \"%{WORD:HTTP_METHOD} %{URIPATH:HTTP_PATH} %{WORD:PROTO_TYPE}/%{BASE16FLOAT:PROTO_VERSION}\" %{INT:HTTP_RESPONSE} %{INT:HTTP_CONTENT_SIZE} \"-|%{URI:URL}\" %{GREEDYDATA}" }
+      }
+    mutate {
+        add_field => {
+          "indexname" => "nginx"
         }
       }
     }
+  else if [fields][logtype] == "tomcat" {
+    grok {
+      match => { "message" => "%{MONTHDAY:MonthDay}-%{MONTH:Month}-%{YEAR:Year} %{HOUR:Hour}:%{MINUTE:Minute}:%{SECOND:Second}\.%{INT:MilliSecond} %{WORD:LogLevel} \[%{HOSTNAME:ClassName}\] %{GREEDYDATA}"}
+    }
+    mutate {
+        add_field => {
+          "indexname" => "tomcat"
+        }
+      }
   }
+}
+
 
 output {
-   elasticsearch {
-      hosts => ["http://localhost:9200"]
-      index => "%{indexname}-%{+yyyy-MM-dd}"
-   }
+  elasticsearch {
+    hosts => ["http://localhost:9200"]
+    index => "%{indexname}-%{+yyyy-MM-dd}"
+  }
 }

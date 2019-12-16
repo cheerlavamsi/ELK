@@ -31,10 +31,10 @@ output {
   }
 }
 
-Logstash with multiple files from filebeat
-On Filebeat Server
-FileBeat Configuration:
-File Name : /etc/filebeat/filebeat.yml
+## Logstash with multiple files from filebeat
+## On Filebeat Server
+## FileBeat Configuration:
+## File Name : /etc/filebeat/filebeat.yml
 filebeat.inputs:
 - type: log
   enabled: true
@@ -61,8 +61,10 @@ processors:
   - add_cloud_metadata: ~
   - add_docker_metadata: ~
   - add_kubernetes_metadata: ~
-On Logstash Server
-FileName : cat /etc/logstash/conf.d/sample.conf
+
+## On Logstash Server
+## FileName : cat /etc/logstash/conf.d/sample.conf
+
 input {
   beats {
     port => 5044
